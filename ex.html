@@ -1,0 +1,456 @@
+<html>
+<head>
+  <meta charset="utf-8" />
+
+    <meta name="description" content="">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="cleartype" content="on">
+		<link rel="stylesheet" href="http://code.jquery.com/mobile/1.3.2/jquery.mobile-1.3.2.min.css" />
+		<link href="./css/bootstrap.css" rel="stylesheet">
+		<link href="./css/bootstrap-responsive.css" rel="stylesheet">	
+		<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+		<script src="http://code.jquery.com/mobile/1.3.2/jquery.mobile-1.3.2.min.js"></script>
+		<link rel="stylesheet" href="app.css">
+</head>
+	<body style="overflow:hidden" onload="onDeviceReady()">
+
+		<div data-role="page" id="running">
+					<div data-role="header">
+						<h1>Exercise Healthy</h1>
+					</div>
+						<!-- <script type="text/javascript" charset="utf-8" src="cordova-2.5.0.js"></script> -->
+						<script type="text/javascript" charset="utf-8" src="cordova-2.5.0.js"></script>
+						<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?sensor=false"></script>
+					
+						<style type="text/css">
+							html {height:100%}
+							body {height:100%; margin:0; padding:0}
+							#map_canvas {height:100%; width:100%}
+						</style>
+						
+						
+						<table border="0" cellspacing="0" cellpadding="0" align="CENTER" >
+					
+							<tr>
+								<td colspan="0" width="330" height="350">
+								<br>
+								<br>
+									<div id="map1"></div>
+									<div id="map2"></div>
+
+									<div id="ui">
+										<!--<div id="distance"></div>-->
+										<div id="time"></div>
+										<div id="speed"></div>
+										<div id="average"></div>
+									</div>									
+								</td>
+							</tr>						
+							<tr>
+								<td width="100px" height="5px">
+									<h1 id="distance" style="font-size:20px;margin:5px 0px -30px 40px;">Distance: 0 m</h1>
+								</td>
+								<td width="100px" height="5px">
+									<!--Distance<h1 id="distance" style="font-size:20px;margin:5px 0px -30px 35px;">    0.0</h1>-->
+									
+									Time<h1 id="timer" style="font-size:20px;margin:5px 0px -30px 40px;">00:00:00</h1>
+								</td>	
+							</tr>	
+						</table>
+						<br><br>						
+						<center>
+							<button type="button" id="btn-start-stop" class="btn btn-large btn-success" style="width:100%;height:50px;">Start</button>
+							<button type="button" id="btn-pause" class="btn btn-large btn-inverse" style="width:100%;height:50px;">Pause</button>
+						</center>
+										
+						<script src="./js/bootstrap.js"></script>		
+						<script language="javascript">
+						var timeuse = 0;
+						var timealluse = 0;
+						var timeinterval = 0;
+						var timeall = 0;
+						var thebest = 0;
+						var lap_array = new Array();
+						
+						function millisectotime(mill)
+						{
+							var hour = Math.floor(timeinterval/36000);
+							var min = Math.floor(timeinterval/600)%60;
+							var sec = Math.floor(timeinterval/10)%60;
+
+							if (hour < 10) hour = "0" + hour;
+							if (min < 10) min = "0" + min;
+							if (sec < 10) sec = "0" + sec;
+							return (hour + ":" + min + ":" + sec  );
+
+
+						}
+
+						function TimerOK()
+						{	
+							timeinterval = timeinterval + 1;
+							$('#timer').html(millisectotime(timeinterval));
+							localStorage.setItem('timer_current',timeinterval);
+							localStorage.setItem('timer_history',JSON.stringify(lap_array));
+							
+
+							if(timeuse == 1)
+							{
+								setTimeout('TimerOK()', 100);
+							}
+						}
+
+						function millisectime(mills)
+						{
+							var hour = Math.floor(timeall/36000);
+							var min = Math.floor(timeall/600)%60;
+							var sec = Math.floor(timeall/10)%60;
+
+							if (hour < 10) hour = "0" + hour;
+							if (min < 10) min = "0" + min;
+							if (sec < 10) sec = "0" + sec;
+
+							return (hour + ":" + min + ":" + sec);
+						}
+
+						function ResetTime()
+						{	
+							timeuse = 0;
+							timeinterval = 0;
+							$('#timer').html(millisectotime(timeinterval));
+						}
+
+						function Timeall()
+						{
+							timeall = timeall + timeinterval;
+							$('#timeall').html(millisectime(timeall));
+							localStorage.setItem('time_all',timeall);
+							if(timealluse == 0)
+							{
+								setTimeout('Timeall()', 100);
+							}
+						}
+						
+						
+
+						$(document).ready(function() { // On page load completed do it function.
+							var status = 0;
+							var btntoggle = 0;
+							var btntoggles  =0;
+							
+							
+							
+							if(localStorage.getItem('timer_history') && localStorage.getItem('timer_current')){
+								lap_array = JSON.parse(localStorage.getItem('timer_history'));
+								timeinterval = parseInt(localStorage.getItem('timer_current'));
+							}
+							
+							if(localStorage.getItem('time_all'))
+							{
+									timeall = parseInt(localStorage.getItem('time_all'));
+							}		
+							var buildstring = "";
+
+								for(var i = 0; i < lap_array.length;i++)
+								{
+									buildstring =  '<h1 style="font-size:40px">' + (i+1) + ' - ' + lap_array[i] + '</h1>' + buildstring ;			
+								}
+								
+							$('#timeall').html(millisectime(timeall));
+							$('#mytime2').html(buildstring);
+							$('#timer').html(millisectotime(timeinterval));
+							
+	
+							$('#btn-delall').on('click',function(){
+								localStorage.removeItem('timer_current');
+								localStorage.removeItem('timer_history');
+								timeinterval = 0;
+								$('#timer').html(millisectotime(timeinterval));
+								$('#mytime').html("");
+								$('#mytime2').html("");
+									lap_array.length = 0;
+							});
+	
+	
+
+							$('#btn-pause').on('click',function(){
+								if (btntoggles == 0)
+								{
+									$('#btn-pause').removeClass("btn-inverse");
+									$('#btn-pause').addClass("btn-success");
+									$('#btn-pause').html('Start');
+									timeuse = 0;
+									btntoggles =1;
+								}
+								else
+								{
+									$('#btn-pause').removeClass("btn-success");
+									$('#btn-pause').addClass("btn-inverse");
+									$('#btn-pause').html('Pause');
+									timeuse = 1;
+									TimerOK();
+									btntoggles =0;
+								}
+							});
+	
+							$('#btn-start-stop').on('click',function(){
+								if (btntoggle == 0)
+								{
+									$('#btn-start-stop').removeClass("btn-success");
+									$('#btn-start-stop').addClass("btn-danger");
+									$('#btn-start-stop').html('Stop');
+	
+									$('#btn-pause').removeClass("btn-primary");
+									$('#btn-pause').addClass("btn-inverse");
+									$('#btn-pause').html('Pause');
+
+									timeuse = 1;			
+									TimerOK();
+									btntoggle = 1;
+								
+								}
+								else
+								{
+									$('#btn-start-stop').removeClass("btn-danger");
+									$('#btn-start-stop').addClass("btn-success");
+									$('#btn-start-stop').html('Start');
+			
+									$('#btn-pause').removeClass("btn-success");
+									$('#btn-pause').addClass("btn-inverse");
+									$('#btn-pause').html('Pause');
+									btntoggle = 0;
+									Timeall();
+									timealluse = 1;
+			
+									lap_array.push(millisectotime(timeinterval));
+									
+									
+									var buildstring = "";
+										for(var i = 0; i < lap_array.length;i++)
+										{
+										buildstring =  '<h1 style="font-size:30px">' + (i+1) + ' - ' + lap_array[i] + '</h1>' + buildstring ;
+										}
+											
+									//$('#totalbest').html(millisectotime(thebest));
+									$('#mytime2').html(buildstring);
+									ResetTime();
+								}
+
+							});
+						});
+
+
+</script>
+				<script src="js/Main.js"></script>		
+					<div data-role="footer" data-position="fixed" class="nav-glyphish-example">
+						
+						<div data-role="navbar" class="nav-glyphish-example" data-grid="c">
+							<ul>
+								<li><a href="#running" id="brunning" >Running</a></li>
+								<li><a href="#route" id="broute">Route</a></li>
+								<li><a href="#friend" id="bfriend" >Friend</a></li>
+								<li><a href="#history" id="bhistory" >History</a></li>
+							</ul>
+						</div>
+					</div>		
+		</div>					
+
+		<div data-role="page" id="route">
+					<div data-role="header">
+						<h1>Exercise Healthy</h1>
+					</div>
+		2
+
+					<div data-role="footer" data-position="fixed" class="nav-glyphish-example">
+						<div data-role="navbar" class="nav-glyphish-example" data-grid="c">
+							<ul>
+								<li><a href="#running" id="brunning" >Running</a></li>
+								<li><a href="#route" id="broute">Route</a></li>
+								<li><a href="#friend" id="bfriend" >Friend</a></li>
+								<li><a href="#history" id="bhistory" >History</a></li>
+							</ul>
+						</div>
+					</div>	
+		</div>
+
+		<div data-role="page" id="friend">
+					<div data-role="header">
+						<h1>Exercise Healthy</h1>
+					</div>
+		3
+
+					<div data-role="footer" data-position="fixed" class="nav-glyphish-example">
+						<div data-role="navbar" class="nav-glyphish-example" data-grid="c">
+							<ul>
+								<li><a href="#running" id="brunning" >Running</a></li>
+								<li><a href="#route" id="broute">Route</a></li>
+								<li><a href="#friend" id="bfriend" >Friend</a></li>
+								<li><a href="#history" id="bhistory" >History</a></li>
+							</ul>
+						</div>
+					</div>	
+		</div>
+
+		<div data-role="page" id="history">
+					<div data-role="header">
+						<h1>History</h1>
+					</div>
+					<style>
+						.block {
+								display: block;
+								margin: 0 0 10px;
+								font-size: 13px;
+								word-break: break-all;
+								word-wrap: break-word;
+								background-color: #cccccc;
+								border: 1px solid #ccc;
+								border: 1px solid rgba(0, 0, 0, 0.15);
+								-webkit-border-radius: 4px;
+								-moz-border-radius: 4px;
+								border-radius: 4px;
+								}
+					</style>
+					
+					<div id="mytimeblock1" class="block" style="overflow-x: hidden;overflow-y: scroll;height:60%;margin: 0px 5px 5px 5px;">
+						<center id="mytime2">
+						
+						</center>
+					</div>
+						<!--<button type="button" id="btn-delall" class="btn-danger" style="width:100%;height:60px;margin:140% 0% 0% 0%">DELETE ALL DATA</button>-->
+	
+					<div data-role="footer" data-position="fixed" class="nav-glyphish-example">
+						<div data-role="navbar" class="nav-glyphish-example" data-grid="c">
+							<ul>
+								<li><a href="#running" id="brunning" >Running</a></li>
+								<li><a href="#total time" id="bTotal">Total Time</a></li>
+								<li><a href="#total distanc" id="bdistanc" >Total Distanc</a></li>
+								<li><a href="#total best" id="bbest" >Total Best</a></li>
+							</ul>
+						</div>
+					</div>
+		</div>
+		
+		<div data-role="page" id="total time">
+					<div data-role="header">
+						<h1>Exercise Healthy</h1>
+					</div>
+					<style>
+						.block {
+								display: block;
+								margin: 0 0 10px;
+								font-size: 13px;
+								word-break: break-all;
+								word-wrap: break-word;
+								background-color: #cccccc;
+								border: 1px solid #ccc;
+								border: 1px solid rgba(0, 0, 0, 0.15);
+								-webkit-border-radius: 4px;
+								-moz-border-radius: 4px;
+								border-radius: 4px;
+								}
+					</style>
+					
+					<div id="mytimeblock2" class="block" style="height:100%">
+					<br><br><br>
+						<h1><center>Total Time</center></h1>
+						<h1><center id="timeall"></h1>
+						
+						</center>
+						<button type="button" id="btn-reset" class="btn-danger" style="width:50%;height:60px;margin:140% 0% 0% 0%">Reset</button>
+					<div data-role="footer" data-position="fixed" class="nav-glyphish-example">
+						<div data-role="navbar" class="nav-glyphish-example" data-grid="c">
+							<ul>
+								<li><a href="#running" id="brunning" >Running</a></li>
+								<li><a href="#total time" id="bTotal">Total Time</a></li>
+								<li><a href="#total distanc" id="bdistanc" >Total Distanc</a></li>
+								<li><a href="#total best" id="bbest" >Total Best</a></li>
+							</ul>
+						</div>
+					</div>	
+					</div>
+		</div>			
+		
+		<div data-role="page" id="total distanc">
+					<div data-role="header">
+						<h1>Exercise Healthy</h1>
+					</div>
+					<style>
+						.block {
+								display: block;
+								margin: 0 0 10px;
+								font-size: 13px;
+								word-break: break-all;
+								word-wrap: break-word;
+								background-color: #cccccc;
+								border: 1px solid #ccc;
+								border: 1px solid rgba(0, 0, 0, 0.15);
+								-webkit-border-radius: 4px;
+								-moz-border-radius: 4px;
+								border-radius: 4px;
+								}
+					</style>
+					
+					<!--<div id="mytimeblock3" class="block" style="overflow-x: hidden;overflow-y: scroll;height:60%;margin: 0px 5px 5px 5px;">
+						<center>Total distanc</center>
+						
+						<center id="distancall">
+						
+						</center>
+						
+					<div data-role="footer" data-position="fixed" class="nav-glyphish-example">
+						<div data-role="navbar" class="nav-glyphish-example" data-grid="c">
+							<ul>
+								<li><a href="#running" id="brunning" >Running</a></li>
+								<li><a href="#total time" id="bTotal">Total Time</a></li>
+								<li><a href="#total distanc" id="bdistanc" >Total Distanc</a></li>
+								<li><a href="#total best" id="bbest" >Total Best</a></li>
+							</ul>
+						</div>
+					</div>				
+					</div>-->
+					<button type="button" id="btn-delall" class="btn-danger" style="width:100%;height:60px;margin:140% 0% 0% 0%">DELETE ALL DATA</button>
+		</div>			
+		
+		<div data-role="page" id="total best">
+					<div data-role="header">
+						<h1>Exercise Healthy</h1>
+					</div>
+					<style>
+						.block {
+								display: block;
+								margin: 0 0 10px;
+								font-size: 13px;
+								word-break: break-all;
+								word-wrap: break-word;
+								background-color: #cccccc;
+								border: 1px solid #ccc;
+								border: 1px solid rgba(0, 0, 0, 0.15);
+								-webkit-border-radius: 4px;
+								-moz-border-radius: 4px;
+								border-radius: 4px;
+								}
+					</style>
+					
+					<div id="mytimeblock4" class="block" style="overflow-x: hidden;overflow-y: scroll;height:60%;margin: 0px 5px 5px 5px;">
+						<h1><center>Total Best</center></h1>
+						<h1><center id="totalbest"></h1>
+						
+						</center>
+
+					<div data-role="footer" data-position="fixed" class="nav-glyphish-example">
+						<div data-role="navbar" class="nav-glyphish-example" data-grid="c">
+							<ul>
+								<li><a href="#running" id="brunning" >Running</a></li>
+								<li><a href="#total time" id="bTotal">Total Time</a></li>
+								<li><a href="#total distanc" id="bdistanc" >Total Distanc</a></li>
+								<li><a href="#total best" id="bbest" >Total Best</a></li>
+							</ul>
+						</div>
+					</div>	
+					</div>
+		</div>
+		
+	</body>
+</html>
